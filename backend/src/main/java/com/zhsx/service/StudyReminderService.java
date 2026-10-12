@@ -3,8 +3,10 @@ package com.zhsx.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.zhsx.common.BusinessException;
 import com.zhsx.dto.ReminderCreateDTO;
+import com.zhsx.entity.StudyGoal;
 import com.zhsx.entity.StudyPlan;
 import com.zhsx.entity.StudyReminder;
+import com.zhsx.mapper.StudyGoalMapper;
 import com.zhsx.mapper.StudyPlanMapper;
 import com.zhsx.mapper.StudyReminderMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +21,17 @@ public class StudyReminderService {
 
     private final StudyReminderMapper reminderMapper;
     private final StudyPlanMapper planMapper;
+    private final StudyGoalMapper goalMapper;
 
     public void createReminder(Long userId, ReminderCreateDTO dto) {
         StudyPlan plan = planMapper.selectById(dto.getPlanId());
         if (plan == null) {
             throw new BusinessException("计划不存在");
+        }
+        // 归属校验：防止给他人计划创建提醒
+        StudyGoal goal = goalMapper.selectById(plan.getGoalId());
+        if (goal == null || !goal.getUserId().equals(userId)) {
+            throw new BusinessException("计划不存在或无权访问");
         }
         StudyReminder reminder = new StudyReminder();
         reminder.setUserId(userId);

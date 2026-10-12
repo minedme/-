@@ -17,7 +17,7 @@ public class MailService {
     @Value("${spring.mail.username}")
     private String from;
 
-    public void sendReminder(String to, String subject, String content) {
+    public boolean sendReminder(String to, String subject, String content) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(from);
@@ -26,8 +26,10 @@ public class MailService {
             message.setText(content);
             mailSender.send(message);
             log.info("邮件已发送至 {}", to);
+            return true;
         } catch (Exception e) {
             log.error("邮件发送失败: {}", e.getMessage());
+            return false;
         }
     }
 }

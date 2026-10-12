@@ -1,5 +1,6 @@
 package com.zhsx.service;
 
+import com.zhsx.common.BusinessException;
 import com.zhsx.entity.StudyGoal;
 import com.zhsx.entity.StudyPlan;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,9 @@ import java.util.List;
 @Service
 public class PlanGeneratorService {
 
+    /** 单个目标最多生成的计划天数，防止超长周期一次性写入海量数据 */
+    private static final long MAX_PLAN_DAYS = 366;
+
     public List<StudyPlan> generatePlan(StudyGoal goal) {
         List<StudyPlan> plans = new ArrayList<>();
         LocalDate start = goal.getStartDate();
@@ -19,6 +23,9 @@ public class PlanGeneratorService {
         long days = ChronoUnit.DAYS.between(start, end) + 1;
         if (days <= 0) {
             return plans;
+        }
+        if (days > MAX_PLAN_DAYS) {
+            throw new BusinessException("学习周期过长，单目标最多支持 " + MAX_PLAN_DAYS + " 天");
         }
 
         String desc = goal.getDescription() != null ? goal.getDescription() : goal.getTitle();
